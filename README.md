@@ -1,347 +1,271 @@
-🚀 ASTRANET – FULL ROADMAP CHUẨN HÓA (RPG + CASUAL + UNITY + IOCP + MONGODB + GUI + VUE DASHBOARD)
+🎯 Mục tiêu
 
-(FINAL LIST – dùng để làm tài liệu hoặc chia task)
+HelixBound là framework backend game viết bằng C#, cho phép:
 
-⭐ MODULE 0 – Chuẩn bị nền tảng
+Tự host server (thay thế Photon SaaS)
 
-Cấu trúc solution cho framework game RPG/Casual
+Hỗ trợ RPG + Casual
 
-Luồng xử lý Client ↔ Server cho game casual
+Kiến trúc server-authoritative
 
-Luồng xử lý Client ↔ Server cho game RPG
+Có Web Dashboard chạy local (Vue 3)
 
-Base architecture cho Stateful Player Server
+Cung cấp Unity package để client kết nối sẵn
 
-Thiết kế thư viện core: AstraNet.Core
+👉 Dev chỉ tập trung làm game logic, không phải network / sync / admin.
 
-Setup môi trường (SDK, IDE, MongoDB, Unity)
+🧱 Kiến trúc tổng thể
+Unity Client
+   ↓ TCP (IOCP)
+HelixBound Server (C#)
+   ├─ Network Core (IOCP)
+   ├─ Protocol (MessagePack)
+   ├─ Runtime Modules
+   ├─ Game Logic (RPG / Casual)
+   ├─ MongoDB Layer
+   ├─ Anti-Cheat
+   └─ Web API (ASP.NET)
+          ↑
+     Vue 3 Local Dashboard
 
-Chọn thư viện phụ trợ (Serilog, MessagePack…)
+🧩 CORE MODULES (RÚT GỌN – CHUẨN HÓA)
+1️⃣ Network Core (IOCP)
 
-Kiến thức TCP quan trọng cho IOCP
+TCP IOCP (SocketAsyncEventArgs)
 
-⭐ MODULE 1 – TCP IOCP (SocketAsyncEventArgs)
+Event-driven, scale 10k–100k connections
 
-Event-driven networking
+Session lifecycle:
 
-IOCP scalable 10k – 100k connections
+Idle → Online → InRoom → InCombat
 
-SessionModel (Idle/Active/InRoom/InCombat)
+Sticky packet fix
 
-Message segmentation & sticky packet fix
+Send/Receive Queue
 
-SendQueue/ReceiveQueue tối ưu cho RPG/Casual
+Heartbeat & disconnect detect
 
-Throttle & chống spam packet
+Flood / spam packet protection
 
-Multi-threading logic + networking
+2️⃣ Protocol & Serialization
 
-Heartbeat
+Binary protocol + MessagePack
 
-Remote disconnect detection
-
-Packet limiter & Flood protection
-
-⭐ MODULE 2 – Serialization & Protocol
-
-Chọn serializer: MessagePack
-
-Packet OPCODE registry
-
-Thiết kế PacketHeader (Opcode + Length)
-
-Binary compression cho RPG (Skill, Combat)
+PacketHeader: Opcode + Length
 
 Protocol versioning
 
-Rule Set chính:
+Core rules:
 
-Login/Logout
+Login / Logout
 
 PlayerInfo
 
 Inventory
 
-Match / Duel
+Match / Room
 
-Map Sync
+Combat / Skill
 
 Chat
 
-⭐ MODULE 3 – MongoDB Layer RPG/Casual
-RPG Schema
+3️⃣ Database Layer (MongoDB)
 
-Stats
+RPG schema:
 
-Level
-
-EXP
+Stats, Level, EXP
 
 Inventory
 
 Quest
 
-Unlocks
+Dungeon progress
 
-CASUAL Schema
+Casual schema:
 
 Progress
 
-Timers/Cooldowns
+Cooldown
 
 Rewards
 
-Cả hai
-
-Daily/Weekly Reset
-
 Atomic update (findOneAndUpdate)
 
-Caching layer (RPG-friendly)
+Index & caching
 
-Index cho performance
+Daily / Weekly reset
 
-Write concern & transaction
+4️⃣ Runtime Framework
 
-⭐ MODULE 4 – Framework Runtime Core
+Module system:
 
-Module System (Auth, Player, Quest, Match, Currency…)
+Auth
 
-EventBus RPG (OnLevelUp, OnItemReceive…)
+Player
 
-TimeManager (Cooldown, server time)
+Quest
 
-RewardManager (Daily reward, login streak)
+Match
 
-Data-driven Config (JSON → Hot Reload)
+Currency
 
-Sync Diff State (gửi delta)
+EventBus (OnLevelUp, OnItemDrop…)
 
-SceneLoader (Town/Field/Dungeon)
+TimeManager (cooldown, server time)
 
-Background Worker
+RewardManager
 
-Lightweight Dependency Injector
+Data-driven config (JSON + hot reload)
 
-⭐ MODULE 5 – Game Logic Casual / RPG
-A. CASUAL
+Delta sync (chỉ gửi diff)
 
-Match Room 2–4 người
+Lightweight DI
 
-Ranking System (MMR/Elo)
+5️⃣ Game Logic Layer
+Casual
 
-Leaderboard realtime
+Match room (2–4 players)
 
 Timer-based gameplay
 
-Casual Boss Room (Sync đơn giản)
+Realtime leaderboard
 
-B. RPG
+Lightweight sync
 
-Player State (Idle → Move → Attack → Skill → Die)
+RPG
 
-Combat Calculator (damage/crit/element)
+Player state machine
 
-Stats growth & level formula
+Combat calculator
 
-Inventory & Item Usage
-
-Quest System
-
-Dungeon Rooms (solo/party)
+Skill / Buff / Debuff
 
 Monster AI (CPU-safe)
 
-Drop Table System
+Dungeon / Party
 
-Sync packet RPG (SkillCast/Damage/Buff/Debuff)
+Drop table
 
-Anti-cheat (SpeedHack, Skill Spam)
+Anti-cheat (speed hack, skill spam)
 
-⭐ MODULE 6 – Packaging Framework
+6️⃣ Packaging & SDK
 
-AstraNet.Core.dll
+HelixBound.Core.dll
 
-AstraNet.Protocol.dll
+HelixBound.Protocol.dll
 
-AstraNet.RPG.dll
+HelixBound.RPG.dll
 
-AstraNet.Casual.dll
+HelixBound.Casual.dll
 
-AstraNet.Tools.dll
+HelixBound.Tools.dll
 
-Unity Package (UPM)
+📦 Unity Package (UPM):
 
-Plugin Template Project cho game mới
+TCP client
 
-Debug Symbols
+Main-thread dispatcher
 
-Logging Package
+Connection state & reconnect
 
-⭐ MODULE 7 – Unity Client (RPG + Casual)
+PlayerController
 
-TCP IOCP client cho Unity
+Transform / Combat sync
 
-Main Thread Dispatcher
+🌐 LOCAL WEB DASHBOARD (VUE 3)
 
-Connection State Manager (DC → Reconnect)
+Chạy local / nội bộ – không phải app C#
 
-Bootstrap + Login scene
+Tech stack
 
-PlayerController (input → packet → server)
+Vue 3 + Vite
 
-Sync Transform
+Pinia
 
-Sync Combat
+WebSocket (live data)
 
-UI Inventory
+ASP.NET Web API backend
 
-UI Quest
+Tính năng
 
-UI Shop
+Admin auth (local)
 
-UI Mail
+Monitor online players
 
-Casual Mode (Room list, Ready, Match Start)
+Player browser & inspect
 
-RPG HUD (HP, MP, Skill Bar)
+Session heatmap
 
-Flow Skill: SkillCast → Damage → Sync → Animation
+Room / Dungeon viewer
 
-⭐ MODULE 8 – Admin Tools (WinForm / WPF)
+Match history (Casual)
 
-Local Admin Tool (offline)
+Economy dashboard (RPG)
 
-Monitor Online Players
+Server health
 
-Inspect player data
+Log viewer
 
-GM Commands (add exp, kick, ban…)
+Config editor (hot reload)
 
-Room Viewer (RPG + Casual)
+Realtime metrics
 
-Log Viewer
+👉 Mở bằng browser: http://localhost:xxxx
 
-Packet Monitor (live)
-
-Config Editor (hot reload)
-
-⭐ MODULE 9 – WEB DASHBOARD (VUE) LOCAL + GLOBAL
-A. LOCAL WEB DASHBOARD — VUE + ASP.NET Web API
-
-VUE 3 + Vite + Pinia
-
-Admin Auth internal (local)
-
-Live Metrics (WebSocket)
-
-Player Browser
-
-Session Heatmap (login/logoff tracking)
-
-Server Health
-
-Dungeon/Room Browser
-
-Item Economy Dashboard (RPG)
-
-Match Data Dashboard (Casual)
-
-Local MongoDB Viewer (simple custom UI)
-
-B. GLOBAL WEB ADMIN — VUE + ASP.NET Web API
-
-JWT + 2FA
-
-Multi-server support
-
-Global Announcement
-
-Leaderboard Dashboard
-
-User Report/Support Tool
-
-Multi-Region server browser
-
-Cross-server metrics
-
-Ban/Unban Player Center
-
-Realtime Notifications via WebSocket
-
-Deployment tool (update config/build version)
-
-⭐ MODULE 10 – SUPER DEMO
-DEMO CASUAL
+🧪 DEMO BUILT-IN
+Casual demo
 
 4 người vào phòng
 
-Sync position nhẹ
-
-Random Map
+Random map
 
 Timer-based scoring
 
-Leaderboard realtime
+Realtime leaderboard
 
-DEMO RPG
+RPG demo
 
 Login
 
-Spawn Town
+Spawn town
 
-Di chuyển map
+Move map
 
-Skill bắn Dummy
+Skill test
 
-Nhặt Item
+Monster drop
 
-Quái rơi loot
+Multiplayer sync
 
-Damage realtime
+Dashboard demo
 
-Multi-player sync
+Edit player data
 
-DEMO TOOL
+Restart server
 
-Winform Dashboard
+Hot reload config
 
-Vue Global Dashboard
+Live monitoring
 
-Edit Player Data
+🧠 Định vị HelixBound
+So sánh	HelixBound
+Photon	❌ SaaS → ✔ Self-host
+Mirror	❌ P2P → ✔ Server authoritative
+Nakama	✔ Tương tự, thiên backend
+GameLift	❌ Infra → ✔ Game framework
 
-Restart Server
+👉 HelixBound = Photon-like backend + Vue 3 local admin + RPG-ready core
 
-Log Viewer
+🧾 TÓM GỌN 1 CÂU (CHUẨN)
 
-Hot Reload Config
+HelixBound là framework backend game C# self-host, dùng IOCP + MongoDB, cung cấp Unity client package và Web Dashboard Vue 3 chạy local để quản trị game RPG & Casual.
 
-⭐ MODULE 11 – NÂNG CAO
+Nếu bạn muốn bước tiếp theo, mình làm được:
 
-Sharding database (RPG scale lớn)
+🔹 Tách HelixBound Core vs Game Module
 
-Zone server / World server
+🔹 Định nghĩa MVP v0.1 (minimum framework)
 
-Auth server riêng
+🔹 Chia task backend / frontend / unity
 
-Cross-server chat
-
-Dedicated matchmaking server
-
-Script Engine (Lua/C# hot reload)
-
-⭐ MODULE 12 – RELEASE
-
-Build Template New Game
-
-Export Unity Sample Package (UPM)
-
-Publish GitHub
-
-Viết Docs
-
-Tối ưu GC-safe
-
-Benchmark (IOCP/MongoDB/Sync)
-
-HelixBound
+🔹 Viết README + sơ đồ kiến trúc
